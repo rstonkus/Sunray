@@ -74,6 +74,9 @@ void AmMotorDriver::begin(){
   pinMode(pinMotorMowDir, OUTPUT);
   pinMode(pinMotorMowPWM, OUTPUT);
   pinMode(pinMotorMowSense, INPUT);
+  #ifdef SECOND_MOW_MOTOR
+  pinMode(pinMotorMow2Sense, INPUT);
+  #endif
   //pinMode(pinMotorMowRpm, INPUT);
   pinMode(pinMotorMowEnable, OUTPUT);
   digitalWrite(pinMotorMowEnable, enableActive);
