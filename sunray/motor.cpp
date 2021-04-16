@@ -211,7 +211,10 @@ void Motor::run() {
       }      
     } else odometryError = false;
       
-    if  (    ( (abs(motorMowPWMCurr) > 100) && (abs(motorMowPWMCurrLP) > 100) && (motorMowSenseLP < 0.005)) 
+    if  (    ( (abs(motorMowPWMCurr) > 100) && (abs(motorMowPWMCurrLP) > 100) && (motorMowSenseLP < 0.005))
+        #ifdef SECOND_MOW_MOTOR
+         || ( (abs(motorMowPWMCurr) > 100) && (abs(motorMowPWMCurrLP) > 100) && (motorMow2SenseLP < 0.005))
+        #endif 
          ||  ( (abs(motorLeftPWMCurr) > 100) && (abs(motorLeftPWMCurrLP) > 100) && (motorLeftSenseLP < 0.005))    
          ||  ( (abs(motorRightPWMCurr) > 100) && (abs(motorRightPWMCurrLP) > 100) && (motorRightSenseLP < 0.005))  ){        
       // at least one motor is not consuming current      
@@ -228,6 +231,10 @@ void Motor::run() {
         CONSOLE.print(motorRightSenseLP);
         CONSOLE.print(",");
         CONSOLE.println(motorMowSenseLP);
+        #ifdef SECOND_MOW_MOTOR
+        CONSOLE.print(",");
+        CONSOLE.println(motorMowSenseLP);
+        #endif
         motorError = true;
       }
     }
@@ -298,12 +305,13 @@ bool Motor::checkFault() {
 void Motor::sense(){
   if (millis() < nextSenseTime) return;
   nextSenseTime = millis() + 20;
-  motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense);
+  motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense, motorMow2Sense);
   float lp = 0.995; // 0.9
   motorRightSenseLP = lp * motorRightSenseLP + (1.0-lp) * motorRightSense;
   motorLeftSenseLP = lp * motorLeftSenseLP + (1.0-lp) * motorLeftSense;
   motorMowSenseLP = lp * motorMowSenseLP + (1.0-lp) * motorMowSense; 
-  motorsSenseLP = motorRightSenseLP + motorLeftSenseLP + motorMowSenseLP;
+  motorMow2SenseLP = lp * motorMow2SenseLP + (1.0-lp) * motorMow2Sense; 
+  motorsSenseLP = motorRightSenseLP + motorLeftSenseLP + motorMowSenseLP + motorMow2SenseLP;
   motorRightPWMCurrLP = lp * motorRightPWMCurrLP + (1.0-lp) * ((float)motorRightPWMCurr);
   motorLeftPWMCurrLP = lp * motorLeftPWMCurrLP + (1.0-lp) * ((float)motorLeftPWMCurr);
   motorMowPWMCurrLP = lp * motorMowPWMCurrLP + (1.0-lp) * ((float)motorMowPWMCurr); 
@@ -329,7 +337,11 @@ void Motor::sense(){
 
   motorLeftOverload = (motorLeftSenseLP > MOTOR_OVERLOAD_CURRENT);
   motorRightOverload = (motorRightSenseLP > MOTOR_OVERLOAD_CURRENT);
-  motorMowOverload = (motorMowSenseLP > MOW_OVERLOAD_CURRENT);
+  #ifdef SECOND_MOW_MOTOR
+    motorMowOverload = ((motorMowSenseLP > MOW_OVERLOAD_CURRENT) || (motorMow2SenseLP > MOW_OVERLOAD_CURRENT));
+  #else
+    motorMowOverload = (motorMowSenseLP > MOW_OVERLOAD_CURRENT);
+  #endif
   if (motorLeftOverload || motorRightOverload || motorMowOverload){
     if (motorOverloadDuration == 0){
       CONSOLE.print("ERROR motor overload duration=");
@@ -340,6 +352,10 @@ void Motor::sense(){
       CONSOLE.print(motorRightSenseLP);
       CONSOLE.print(",");
       CONSOLE.println(motorMowSenseLP);
+      #ifdef SECOND_MOW_MOTOR
+        CONSOLE.print(",");
+        CONSOLE.println(motorMow2SenseLP);
+      #endif
     }
     motorOverloadDuration += 20;     
   } else {

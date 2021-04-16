@@ -140,7 +140,17 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 
 // ----- mowing motor -------------------------------------------------
-#define MOW_OVERLOAD_CURRENT 2.0    // mowing motor overload current (amps)
+// When 3d printed chassis with two mow brushed motors are used
+// Driver has to be modified and JP3 bridge soldered on the board to enable current sense for the motor
+// For some examples see here: https://forum.ardumower.de/threads/jp3-pin-2nd-mow-motor.23780/#post-43736
+// Custom protection board also recommended
+// #define SECOND_MOW_MOTOR
+
+#ifdef SECOND_MOW_MOTOR
+  #define MOW_OVERLOAD_CURRENT 1.0    // single mowing motor overload current (amps)
+#else
+  #define MOW_OVERLOAD_CURRENT 2.0    // mowing motor overload current (amps)
+#endif
 
 // should the direction of mowing motor toggle each start? (yes: true, no: false)
 #define MOW_TOGGLE_DIR       true
@@ -153,12 +163,6 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // should the motor fault (error) detection be enabled? 
 #define ENABLE_FAULT_DETECTION  true
 //#define ENABLE_FAULT_DETECTION  false       // use this if you keep getting 'motor error'
-
-// When 3d printed chassis with two mow brushed motors are used
-// Driver has to be modified and JP3 bridge soldered on the board to enable current sense for the motor
-// For some examples see here: https://forum.ardumower.de/threads/jp3-pin-2nd-mow-motor.23780/#post-43736
-// Custom protection board also recommended
-#define SECOND_MOW_MOTOR
 
 
 // ------ WIFI module (ESP8266 ESP-01 with ESP firmware 2.2.1) --------------------------------

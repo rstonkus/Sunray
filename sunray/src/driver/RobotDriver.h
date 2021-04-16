@@ -21,7 +21,7 @@ class MotorDriver {
     // reset motor faults
     virtual void resetMotorFaults() = 0;
     // get motor currents (ampere)
-    virtual void getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent) = 0;
+    virtual void getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent, float &mow2Current) = 0;
     // get motor encoder ticks
     virtual void getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks) = 0; 
 };

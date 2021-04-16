@@ -225,10 +225,11 @@ void SerialMotorDriver::getMotorFaults(bool &leftFault, bool &rightFault, bool &
 void SerialMotorDriver::resetMotorFaults(){
 }
 
-void SerialMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent) {
+void SerialMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent, float &mow2Current) {
   leftCurrent = 0.5;
   rightCurrent = 0.5;
   mowCurrent = 0.8;
+  mow2Current = 0.0;
 }
 
 void SerialMotorDriver::getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks){
