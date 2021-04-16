@@ -154,6 +154,12 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define ENABLE_FAULT_DETECTION  true
 //#define ENABLE_FAULT_DETECTION  false       // use this if you keep getting 'motor error'
 
+// When 3d printed chassis with two mow brushed motors are used
+// Driver has to be modified and JP3 bridge soldered on the board to enable current sense for the motor
+// For some examples see here: https://forum.ardumower.de/threads/jp3-pin-2nd-mow-motor.23780/#post-43736
+// Custom protection board also recommended
+#define SECOND_MOW_MOTOR
+
 
 // ------ WIFI module (ESP8266 ESP-01 with ESP firmware 2.2.1) --------------------------------
 // NOTE: all settings (maps, absolute position source etc.) are stored in your phone - when using another
@@ -367,6 +373,9 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define pinMotorMowPWM 2           // M1_IN1 mower motor PWM pin (if using MOSFET, use this pin)
 #define pinMotorMowDir 29          // M1_IN2 mower motor Dir pin (if using MOSFET, keep unconnected)
 #define pinMotorMowSense A3        // M1_FB  mower motor current sense  
+#ifdef SECOND_MOW_MOTOR
+#define pinMotorMow2Sense A6       // M2_FB  mower motor current sense
+#endif
 #define pinMotorMowFault 26        // M1_SF  mower motor fault   (if using MOSFET/L298N, keep unconnected)
 #define pinMotorMowEnable 28       // EN mower motor enable      (if using MOSFET/L298N, keep unconnected)
 #define pinMotorMowRpm A11
