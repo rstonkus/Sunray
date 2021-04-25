@@ -62,7 +62,7 @@ MPU9250_DMP imu;
 Motor motor;
 Battery battery;
 PinManager pinMan;
-UBLOX gps(GPS,GPS_BAUDRATE);
+UBLOX gps;
 BLEConfig bleConfig;
 Buzzer buzzer;
 Sonar sonar;
@@ -73,6 +73,9 @@ RCModel rcmodel;
 PID pidLine(0.2, 0.01, 0); // not used
 PID pidAngle(2, 0.1, 0);  // not used
 
+int stateButton = 0;  
+int stateButtonTemp = 0;
+unsigned long stateButtonTimeout = 0;
 OperationType stateOp = OP_IDLE; // operation-mode
 Sensor stateSensor = SENS_NONE; // last triggered sensor
 unsigned long controlLoops = 0;
@@ -680,7 +683,7 @@ void start(){
   pinMan.begin();       
   // keep battery switched ON
   pinMode(pinBatterySwitch, OUTPUT);    
-  pinMode(pinDockingReflector, INPUT);
+  //pinMode(pinDockingReflector, INPUT);
   digitalWrite(pinBatterySwitch, HIGH);         
   pinMode(pinButton, INPUT_PULLUP);
   buzzer.begin();      
@@ -725,7 +728,7 @@ void start(){
   stopButton.begin();
 
   bleConfig.run();   
-  BLE.println(VER);  
+  //BLE.println(VER); is this needed? can confuse BLE modules if not connected?  
     
   rcmodel.begin();  
   motor.begin();
@@ -753,7 +756,7 @@ void start(){
   CONSOLE.println("change:     #define SERIAL_BUFFER_SIZE 128     into into:     #define SERIAL_BUFFER_SIZE 1024");
   CONSOLE.println("-----------------------------------------------------");
   
-  gps.begin();   
+  gps.begin(GPS,GPS_BAUDRATE);   
   maps.begin();      
   //maps.clipperTest();
   
@@ -1321,12 +1324,7 @@ void run(){
           if (DOCKING_STATION){
             setOperation(OP_DOCK);
           }
-        }
-        if (stopButton.triggered()){
-          CONSOLE.println("stopButton triggered!");
-          stateSensor = SENS_STOP_BUTTON;
-          setOperation(OP_IDLE);
-        }
+        }        
       }
       else if (stateOp == OP_CHARGE){      
         if (battery.chargerConnected()){
@@ -1341,18 +1339,55 @@ void run(){
           }
         } else {
           setOperation(OP_IDLE);        
-        }
+        }        
+      }      
+      
+      // process button state
+      if (stateButton == 1){        
+        stateButton = 0;  // reset button state
+        if ((stateOp == OP_MOW) || (stateOp == OP_DOCK)) {
+          stateSensor = SENS_STOP_BUTTON;
+          setOperation(OP_IDLE, false, true);                     
+        } else {
+          stateSensor = SENS_STOP_BUTTON;
+          setOperation(OP_MOW, false, true);
+        }      
+      } else if (stateButton == 5){
+        stateButton = 0; // reset button state
+        stateSensor = SENS_STOP_BUTTON;
+        setOperation(OP_DOCK, false, true);
       }
       
       
-    }    
-  }
+    } // if (!imuIsCalibrating)        
+  }   // if (millis() >= nextControlTime)
     
   // ----- read serial input (BT/console) -------------
   processComm();
   outputConsole();       
-  watchdogReset();     
-}
+  watchdogReset();
+
+  // compute button state (stateButton)
+  if (BUTTON_CONTROL){
+    if (stopButton.triggered()){
+      if (millis() > stateButtonTimeout){
+        stateButtonTimeout = millis() + 1000;
+        stateButtonTemp++; // next state
+        buzzer.sound(SND_READY, true);                                     
+      }
+                          
+    } else {
+      if (stateButtonTemp > 0){
+        // button released => set stateButton
+        stateButtonTimeout = 0;
+        stateButton = stateButtonTemp;
+        stateButtonTemp = 0;
+        CONSOLE.print("stateButton ");
+        CONSOLE.println(stateButton);
+      }
+    }
+  }    
+}        
 
 
 

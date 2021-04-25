@@ -29,7 +29,7 @@
 #include "PubSubClient.h"
 
 
-#define VER "Ardumower Sunray,1.0.176"
+#define VER "Ardumower Sunray,1.0.180"
 
 enum OperationType {
       OP_IDLE,      
@@ -71,6 +71,7 @@ extern float stateY;  // position-north (m)
 extern float stateDelta;  // direction (rad)
 extern String stateOpText;  // current operation as text
 extern String gpsSolText; // current gps solution as text
+extern int stateButton;  // button state
 
 extern float setSpeed; // linear speed (m/s)
 extern int fixTimeout;

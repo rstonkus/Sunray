@@ -119,13 +119,14 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // ...for the older 42mm diameter motor (white connector)  https://wiki.ardumower.de/images/d/d6/Ardumower_chassis_inside_ready.jpg
 #define TICKS_PER_REVOLUTION  1050 / 2    // odometry ticks per wheel revolution 
 
-// ...for the brushless motor 4/2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
-// #define TICKS_PER_REVOLUTION  1194 / 2    // odometry ticks per wheel revolution
+// ...for the brushless motor april 2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
+//#define TICKS_PER_REVOLUTION  595 / 2    // 1194/2  odometry ticks per wheel revolution
+
+// #define TICKS_PER_REVOLUTION  304     // odometry ticks per wheel revolution (RM18)
 
 
 // ----- gear motors --------------------------------------------------
-#define MOTOR_DRIVER_BRUSHLESS   false    // use this for classic brushed motor drivers
-//#define MOTOR_DRIVER_BRUSHLESS   true     // use this for new brushless motor drivers
+// #define MOTOR_DRIVER_BRUSHLESS   1     // uncomment this for new brushless motor drivers
 
 #define MOTOR_OVERLOAD_CURRENT 0.8    // gear motors overload current (amps)
 
@@ -270,7 +271,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define GPS_CONFIG   true     // configure GPS receiver (recommended )
 //#define GPS_CONFIG   false  // do not configure GPS receiver
 
-#define GPS_CONFIG_FILTER   true     // use signal strength filter? (recommended)
+#define GPS_CONFIG_FILTER   true     // use signal strength filter? (recommended to get rid of 'FIX jumps')
 //#define GPS_CONFIG_FILTER   false     // use this if you have difficulties to get a FIX solution
 
 
@@ -311,6 +312,11 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // more details: https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#R.2FC_model
 //#define RCMODEL_ENABLE true
 #define RCMODEL_ENABLE false
+
+// button control (turns on additional features via the POWER-ON button)
+#define BUTTON_CONTROL true      // additional features activated (press-and-hold button for specific beep count: 
+                                 //  1 beep=start/stop, 5 beeps=dock, 3 beeps=R/C mode ON/OFF)
+//#define BUTTON_CONTROL false   // additional features deactivated
 
 
 // --------- serial monitor output (CONSOLE) ------------------------
