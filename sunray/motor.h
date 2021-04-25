@@ -53,6 +53,7 @@ class Motor {
     void begin();
     void run();      
     void test();
+    void plot();
     void setLinearAngularSpeed(float linear, float angular, bool useLinearRamp = true);
     void setMowState(bool switchOn);   
     void stopImmediately(bool includeMowerMotor);
