@@ -7,7 +7,7 @@
 #include "SerialRobotDriver.h"
 #include "../../config.h"
 
-#define COMM  Serial1
+#define COMM  ROBOT
 
 
 
@@ -52,7 +52,7 @@ void SerialRobotDriver::requestMotorPwm(int leftPwm, int rightPwm, int mowPwm){
   req += "AT+M,";
   req +=  (-rightPwm);   // ag 
   req += ",";
-  req +=  (-leftPwm);    // ag
+  req +=  (leftPwm);    // ag
   req += ",";  
   if (abs(mowPwm) > 0)
     req += "1";

@@ -120,7 +120,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #define TICKS_PER_REVOLUTION  1050 / 2    // odometry ticks per wheel revolution 
 
 // ...for the brushless motor april 2021   https://wiki.ardumower.de/index.php?title=Datei:BLUnit.JPG
-//#define TICKS_PER_REVOLUTION  595 / 2    // 1194/2  odometry ticks per wheel revolution
+//#define TICKS_PER_REVOLUTION  1300 / 2    // 1194/2  odometry ticks per wheel revolution
 
 // #define TICKS_PER_REVOLUTION  304     // odometry ticks per wheel revolution (RM18)
 
@@ -223,7 +223,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // https://wiki.ardumower.de/index.php?title=Free_wheel_sensor
 // #define BUMPER_ENABLE true
 #define BUMPER_ENABLE false
-#define BUMPER_DEADTIME 5000  // linear motion dead-time (ms) after bumper is allowed to trigger
+#define BUMPER_DEADTIME 1000  // linear motion dead-time (ms) after bumper is allowed to trigger
 
 
 // ----- battery charging current measurement (INA169) --------------
@@ -268,8 +268,8 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // configure ublox f9p with optimal settings (will be stored in f9p RAM only)
 // NOTE: due to a PCB1.3 bug GPS_RX pin is not working and you have to fix this by a wire:
 // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#PCB1.3_GPS_pin_fix   (see step 2)
-#define GPS_CONFIG   true     // configure GPS receiver (recommended )
-//#define GPS_CONFIG   false  // do not configure GPS receiver
+#define GPS_CONFIG   true     // configure GPS receiver (recommended - requires GPS wire fix above!)
+//#define GPS_CONFIG   false  // do not configure GPS receiver (no GPS wire fix required)
 
 #define GPS_CONFIG_FILTER   true     // use signal strength filter? (recommended to get rid of 'FIX jumps')
 //#define GPS_CONFIG_FILTER   false     // use this if you have difficulties to get a FIX solution
@@ -330,7 +330,7 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 #elif __SAMD51__
   #define BOARD "Adafruit Grand Central M4"
   #define CONSOLE Serial      // Adafruit Grand Central M4 
-#else 
+#elif __linux__ 
   #define BOARD "Raspberry PI"
   #define CONSOLE Console 
 #endif
@@ -345,17 +345,23 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 
 #ifdef _SAM3XA_                 // Arduino Due
   #define WIFI Serial1
+  #define ROBOT Serial1
   #define BLE Serial2
   #define GPS Serial3
   //#define GPS Serial                // only use this for .ubx logs (sendgps.py)
 #elif __SAMD51__                      // Adafruit Grand Central M4 
-  #define WIFI Serial2                
+  #define WIFI Serial2 
+  #define ROBOT Serial2               
   #define BLE Serial3
   #define GPS Serial4
 #elif __linux__ 
-  #define WIFI Serial2                
-  #define BLE Serial3
-  #define GPS Serial4
+  #define WIFI SerialWIFI                
+  #define SERIAL_WIFI_PATH "/dev/null"  
+  #define BLE SerialBLE
+  #define GPS SerialGPS
+  #define SERIAL_GPS_PATH "/dev/ttyACM0"  
+  #define ROBOT SerialROBOT
+  #define SERIAL_ROBOT_PATH "/dev/ttyUSB0"  
 #endif
 
 
