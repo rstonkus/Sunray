@@ -13,6 +13,7 @@
 void processComm();
 void outputConsole();
 
+void processWifiRelayClient();
 void processWifiAppServer();
 void processWifiMqttClient();
 void processConsole();
