@@ -32,6 +32,7 @@ class SerialRobotDriver: public RobotDriver {
     float chargeVoltage;
     float chargeCurrent;
     float mowCurr;
+    float mow2Curr;
     float motorLeftCurr;
     float motorRightCurr;
     bool resetMotorTicks;

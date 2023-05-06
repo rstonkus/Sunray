@@ -65,6 +65,7 @@ void Motor::begin() {
   motorLeftOverload = false;
   motorRightOverload = false;
   motorMowOverload = false; 
+  motorMow2Overload = false;
   
   odometryError = false;  
   
@@ -413,7 +414,8 @@ void Motor::checkOverload(){
   motorLeftOverload = (motorLeftSenseLP > MOTOR_OVERLOAD_CURRENT);
   motorRightOverload = (motorRightSenseLP > MOTOR_OVERLOAD_CURRENT);
   motorMowOverload = (motorMowSenseLP > MOW_OVERLOAD_CURRENT);
-  if (motorLeftOverload || motorRightOverload || motorMowOverload){
+  motorMow2Overload = (motorMow2SenseLP > MOW_OVERLOAD_CURRENT);
+  if (motorLeftOverload || motorRightOverload || motorMowOverload || motorMow2Overload){
     if (motorOverloadDuration == 0){
       CONSOLE.print("ERROR motor overload (average current too high) - duration=");
       CONSOLE.print(motorOverloadDuration);
@@ -422,7 +424,9 @@ void Motor::checkOverload(){
       CONSOLE.print(",");
       CONSOLE.print(motorRightSenseLP);
       CONSOLE.print(",");
-      CONSOLE.println(motorMowSenseLP);
+      CONSOLE.print(motorMowSenseLP);
+      CONSOLE.print(",");
+      CONSOLE.println(motorMow2SenseLP);
     }
     motorOverloadDuration += 20;     
   } else {

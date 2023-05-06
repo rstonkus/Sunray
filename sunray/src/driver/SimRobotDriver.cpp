@@ -173,18 +173,21 @@ void SimMotorDriver::resetMotorFaults(){
   simMotorLeftFault = simMotorRightFault = simMotorMowFault = false;
 }
 
-void SimMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent) {  
+void SimMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent, float &mow2Current) {  
   leftCurrent = abs(simRobot.leftSpeed) / 2.0;
   rightCurrent = abs(simRobot.rightSpeed) / 2.0;
   mowCurrent = abs(simRobot.mowSpeed);
+  mow2Current = abs(simRobot.mowSpeed);
   // if overload, motor turns, but takes way more current
   if (simMotorLeftOverload) leftCurrent = 8.0;
   if (simMotorRightOverload) rightCurrent = 8.0;  
   if (simMotorMowOverload) mowCurrent = 8.0;
+  if (simMotorMowOverload) mow2Current = 8.0;
   // if fault, motor does not turn
   if (simMotorLeftFault) leftCurrent = 0;
   if (simMotorRightFault) rightCurrent = 0;
   if (simMotorMowFault) mowCurrent = 0;
+  if (simMotorMowFault) mow2Current = 0;
 }
 
 void SimMotorDriver::getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks){

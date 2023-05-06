@@ -58,7 +58,7 @@ class SimMotorDriver: public MotorDriver {
     void setMotorPwm(int leftPwm, int rightPwm, int mowPwm) override;
     void getMotorFaults(bool &leftFault, bool &rightFault, bool &mowFault) override;
     void resetMotorFaults()  override;
-    void getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent) override;
+    void getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent, float &mow2Current) override;
     void getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks) override;
     // ----- simulate errors, sensor triggers ----
     void setSimOdometryError(bool flag);

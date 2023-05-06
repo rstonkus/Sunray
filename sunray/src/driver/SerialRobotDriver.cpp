@@ -363,13 +363,14 @@ void SerialRobotDriver::summaryResponse(){
       } else if (counter == 7){
         motorFault = (intValue != 0);
       } else if (counter == 8){
-        //CONSOLE.println(cmd.substring(lastCommaIdx+1, ch==',' ? idx : idx+1));
         mowCurr = floatValue;
       } else if (counter == 9){
-        motorLeftCurr = floatValue;
+        mow2Curr = floatValue;
       } else if (counter == 10){
-        motorRightCurr = floatValue;
+        motorLeftCurr = floatValue;
       } else if (counter == 11){
+        motorRightCurr = floatValue;
+      } else if (counter == 12){
         batteryTemp = floatValue;
       } 
       counter++;
@@ -568,22 +569,18 @@ void SerialMotorDriver::getMotorFaults(bool &leftFault, bool &rightFault, bool &
     CONSOLE.print(" rightCurr=");
     CONSOLE.print(serialRobot.motorRightCurr);
     CONSOLE.print(" mowCurr=");
-    CONSOLE.println(serialRobot.mowCurr);
+    CONSOLE.print(serialRobot.mowCurr);
+    CONSOLE.print(" mow2Curr=");
+    CONSOLE.println(serialRobot.mow2Curr);
   }
   mowFault = false;
 }
 
 void SerialMotorDriver::resetMotorFaults(){
   CONSOLE.println("serialRobot: resetting motor fault");
-  //serialRobot.requestMotorPwm(1, 1, 0);
-  //delay(1);
-  //serialRobot.requestMotorPwm(0, 0, 0);
 }
 
 void SerialMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, float &mowCurrent, float &mow2Current) {  
-  //leftCurrent = 0.5;
-  //rightCurrent = 0.5;
-  //mowCurrent = 0.8;
   leftCurrent = serialRobot.motorLeftCurr;
   rightCurrent = serialRobot.motorRightCurr;
   mowCurrent = serialRobot.mowCurr;
