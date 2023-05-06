@@ -3,51 +3,91 @@
 // Licensed GPLv3 for open source use
 // or Grau GmbH Commercial License for commercial use (http://grauonline.de/cms2/?page_id=153)
 
-// external robot (with motor drivers, battery, bumper etc.) connected and controlled via serial line
+// Alfred mower: external robot (with motor drivers, battery, bumper etc.) connected and controlled via serial line
 
-#ifndef AM_SERIAL_ROBOT_DRIVER_H
-#define AM_SERIAL_ROBOT_DRIVER_H
+#ifndef SERIAL_ROBOT_DRIVER_H
+#define SERIAL_ROBOT_DRIVER_H
 
 #include <Arduino.h>
 #include "RobotDriver.h"
+#ifdef __linux__
+  #include <Process.h>
+#endif
 
 
-class SerialRobotDriver {
+class SerialRobotDriver: public RobotDriver {
   public:
+    String robotID;
+    String mcuFirmwareName;
+    String mcuFirmwareVersion;
+    int requestLeftPwm;
+    int requestRightPwm;
+    int requestMowPwm;        
     unsigned long encoderTicksLeft;
     unsigned long encoderTicksRight;
     unsigned long encoderTicksMow;
-    bool receivedEncoders;
+    bool mcuCommunicationLost;
     bool motorFault;
     float batteryVoltage;
     float chargeVoltage;
     float chargeCurrent;
+    float mowCurr;
+    float motorLeftCurr;
+    float motorRightCurr;
+    bool resetMotorTicks;
+    float batteryTemp;
+    float cpuTemp;
     bool triggeredLeftBumper;
     bool triggeredRightBumper;
     bool triggeredLift;
     bool triggeredRain;
-    bool triggeredStopButton;           
-    void begin();
-    void run();
+    bool triggeredStopButton;
+    void begin() override;
+    void run() override;
+    bool getRobotID(String &id) override;
+    bool getMcuFirmwareVersion(String &name, String &ver) override;
+    float getCpuTemperature() override;
     void requestMotorPwm(int leftPwm, int rightPwm, int mowPwm);
     void requestSummary();
-  protected:
+    void requestVersion();
+    void updatePanelLEDs();
+    void updateCpuTemperature();
+    void updateWifiConnectionState();
+    bool setLedState(int ledNumber, bool greenState, bool redState);
+    bool setFanPowerState(bool state);
+    bool setImuPowerState(bool state);
+  protected:    
+    bool ledPanelInstalled;
+    #ifdef __linux__
+      Process cpuTempProcess;
+      Process wifiStatusProcess;    
+    #endif
     String cmd;
     String cmdResponse;
+    unsigned long nextMotorTime;    
     unsigned long nextSummaryTime;
+    unsigned long nextConsoleTime;
+    unsigned long nextTempTime;
+    unsigned long nextWifiTime;
+    unsigned long nextLedTime;
+    int cmdMotorCounter;
+    int cmdSummaryCounter;
+    int cmdMotorResponseCounter;
+    int cmdSummaryResponseCounter;
     void sendRequest(String s);
     void processComm();
     void processResponse(bool checkCrc);
     void motorResponse();
     void summaryResponse();
+    void versionResponse();
 };
 
 class SerialMotorDriver: public MotorDriver {
   public:        
     unsigned long lastEncoderTicksLeft;
     unsigned long lastEncoderTicksRight; 
+    unsigned long lastEncoderTicksMow;     
     SerialRobotDriver &serialRobot;
-    bool started;
     SerialMotorDriver(SerialRobotDriver &sr);
     void begin() override;
     void run() override;
@@ -59,7 +99,16 @@ class SerialMotorDriver: public MotorDriver {
 };
 
 class SerialBatteryDriver : public BatteryDriver {
-  public:    
+  public:   
+    float batteryTemp;
+    bool mcuBoardPoweredOn;
+    unsigned long nextTempTime;
+    unsigned long nextADCTime;
+    bool adcTriggered;
+    unsigned long linuxShutdownTime;
+    #ifdef __linux__
+      Process batteryTempProcess;
+    #endif
     SerialRobotDriver &serialRobot;
     SerialBatteryDriver(SerialRobotDriver &sr);
     void begin() override;
@@ -67,8 +116,10 @@ class SerialBatteryDriver : public BatteryDriver {
     float getBatteryVoltage() override;
     float getChargeVoltage() override;
     float getChargeCurrent() override;    
+    float getBatteryTemperature() override;    
     virtual void enableCharging(bool flag) override;
     virtual void keepPowerOn(bool flag) override;
+    void updateBatteryTemperature();
 };
 
 class SerialBumperDriver: public BumperDriver {
@@ -78,6 +129,8 @@ class SerialBumperDriver: public BumperDriver {
     void begin() override;
     void run() override;
     bool obstacle() override;
+    bool getLeftBumper() override;
+    bool getRightBumper() override;
     void getTriggeredBumper(bool &leftBumper, bool &rightBumper) override;  	  		    
 };
 
@@ -88,6 +141,34 @@ class SerialStopButtonDriver: public StopButtonDriver {
     void begin() override;
     void run() override;
     bool triggered() override;  	  		    
+};
+
+class SerialRainSensorDriver: public RainSensorDriver {
+  public:    
+    SerialRobotDriver &serialRobot;
+    SerialRainSensorDriver(SerialRobotDriver &sr);    
+    void begin() override;
+    void run() override;
+    bool triggered() override;  
+};
+
+class SerialLiftSensorDriver: public LiftSensorDriver {
+  public:    
+    SerialRobotDriver &serialRobot;
+    SerialLiftSensorDriver(SerialRobotDriver &sr);    
+    void begin() override;
+    void run() override;
+    bool triggered() override;  
+};
+
+class SerialBuzzerDriver: public BuzzerDriver {
+  public:    
+    SerialRobotDriver &serialRobot;
+    SerialBuzzerDriver(SerialRobotDriver &sr);    
+    void begin() override;
+    void run() override;
+    void noTone() override;
+    void tone(int freq) override;  
 };
 
 
