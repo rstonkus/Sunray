@@ -20,17 +20,15 @@ UBLOX::UBLOX()
 {
   debug = false;
   verbose = false;
+  useTCP = false;
+  solutionTimeout = 0;
   #ifdef GPS_DUMP
     verbose = true;
   #endif
 }
 
-/* starts the serial communication */
-void UBLOX::begin(HardwareSerial& bus,uint32_t baud)
-{	
-  CONSOLE.println("UBLOX::begin");
-  _bus = &bus;
-	_baud = baud;  
+void UBLOX::begin(){
+  CONSOLE.println("using gps driver: UBLOX");
   this->state    = GOT_NONE;
   this->msgclass = -1;
   this->msgid    = -1;
@@ -46,8 +44,33 @@ void UBLOX::begin(HardwareSerial& bus,uint32_t baud)
   this->chksumErrorCounter = 0;
   this->dgpsChecksumErrorCounter = 0;
   this->dgpsPacketCounter = 0;
+}
+
+void UBLOX::begin(Client &client, char *host, uint16_t port){
+  CONSOLE.println("UBLOX::begin tcp");
+   useTCP = true;
+  _client = &client;
+  if(!client.connect(host,port)){
+    CONSOLE.print("Cannot connect to ");
+    CONSOLE.print(host);
+    CONSOLE.print(":");
+    CONSOLE.println(port);
+  }
+  // start streaming-in
+  begin(); 
+}   
+
+
+/* starts the serial communication */
+void UBLOX::begin(HardwareSerial& bus,uint32_t baud)
+{	
+  CONSOLE.println("UBLOX::begin serial");
+  _bus = &bus;
+	_baud = baud;  
 	// begin the serial port for uBlox	
   _bus->begin(_baud);
+   // start streaming-in
+  begin(); 
   if (GPS_CONFIG){
     configure();
   }
@@ -96,6 +119,7 @@ bool UBLOX::configure(){
         setValueSuccess &= configGPS.addCfgValset8(0x20910045, 0); // CFG-MSGOUT-UBX_NAV_VELNED_USB     (off)
         setValueSuccess &= configGPS.addCfgValset8(0x2091026b, 0); // CFG-MSGOUT-UBX_RXM_RTCM_USB   (off)
         setValueSuccess &= configGPS.addCfgValset8(0x20910348, 0); // CFG-MSGOUT-UBX_NAV_SIG_USB   (off)
+        setValueSuccess &= configGPS.addCfgValset8(0x2091005e, 0); // CFG-MSGOUT-UBX_NAV_TIMEUTC_USB   (off)
         
         // ----- uart1 messages (Ardumower) -----------------          
         setValueSuccess &= configGPS.addCfgValset8(0x20910007, 0); // CFG-MSGOUT-UBX_NAV_PVT_UART1   (off)
@@ -103,7 +127,8 @@ bool UBLOX::configure(){
         setValueSuccess &= configGPS.addCfgValset8(0x20910034, 0); // CFG-MSGOUT-UBX_NAV_HPPOSLLH_UART1   (off)
         setValueSuccess &= configGPS.addCfgValset8(0x20910043, 0); // CFG-MSGOUT-UBX_NAV_VELNED_UART1     (off)
         setValueSuccess &= configGPS.addCfgValset8(0x20910269, 0); // CFG-MSGOUT-UBX_RXM_RTCM_UART1   (off)
-        setValueSuccess &= configGPS.sendCfgValset8(0x20910346, timeout); // CFG-MSGOUT-UBX_NAV_SIG_UART1   (off)
+        setValueSuccess &= configGPS.addCfgValset8(0x20910346, 0); // CFG-MSGOUT-UBX_NAV_SIG_UART1   (off)
+        setValueSuccess &= configGPS.sendCfgValset8(0x2091005c, timeout); // CFG-MSGOUT-UBX_NAV_TIMEUTC_UART1   (off)
       }
       else if (idx == 1){
         setValueSuccess &= configGPS.newCfgValset8(0x209100a8, 0, VAL_LAYER_RAM); // CFG-MSGOUT-NMEA_ID_DTM_UART2  (off)
@@ -163,11 +188,11 @@ bool UBLOX::configure(){
         // ----  gps nav5 input filter ----------------------------------
         // minimum condition when the receiver should try a navigation solution
         // https://wiki.ardumower.de/index.php?title=Ardumower_Sunray#RTK_float-to-fix_recovery_and_false-fix_issues
-        if (GPS_CONFIG_FILTER){
-          setValueSuccess &= configGPS.addCfgValset8(0x201100a4, 10); // CFG-NAVSPG-INFIL_MINELEV  (10 Min SV elevation degree)
-          setValueSuccess &= configGPS.addCfgValset8(0x201100aa, 10); // CFG-NAVSPG-INFIL_NCNOTHRS (10 C/N0 Threshold #SVs)
-          setValueSuccess &= configGPS.addCfgValset8(0x201100ab, 30); // CFG-NAVSPG-INFIL_CNOTHRS  (30 dbHz)
-        } else {
+        if (GPS_CONFIG_FILTER){ // custom filter settings
+          setValueSuccess &= configGPS.addCfgValset8(0x201100a4, CPG_CONFIG_FILTER_MINELEV); // CFG-NAVSPG-INFIL_MINELEV  (10 Min SV elevation degree)
+          setValueSuccess &= configGPS.addCfgValset8(0x201100aa, CPG_CONFIG_FILTER_NCNOTHRS); // CFG-NAVSPG-INFIL_NCNOTHRS (10 C/N0 Threshold #SVs)
+          setValueSuccess &= configGPS.addCfgValset8(0x201100ab, CPG_CONFIG_FILTER_CNOTHRS); // CFG-NAVSPG-INFIL_CNOTHRS  (30 dbHz)
+        } else { // ublox default filter settings
           setValueSuccess &= configGPS.addCfgValset8(0x201100a4, 10); // CFG-NAVSPG-INFIL_MINELEV  (10 Min SV elevation degree)
           setValueSuccess &= configGPS.addCfgValset8(0x201100aa, 0);  // CFG-NAVSPG-INFIL_NCNOTHRS (0 C/N0 Threshold #SVs)
           setValueSuccess &= configGPS.addCfgValset8(0x201100ab, 0);  // CFG-NAVSPG-INFIL_CNOTHRS  (0 dbHz)   
@@ -183,7 +208,8 @@ bool UBLOX::configure(){
         setValueSuccess &= configGPS.addCfgValset8(0x20910036, 1); // CFG-MSGOUT-UBX_NAV_HPPOSLLH_USB   (every solution)
         setValueSuccess &= configGPS.addCfgValset8(0x20910045, 1); // CFG-MSGOUT-UBX_NAV_VELNED_USB     (every solution)
         setValueSuccess &= configGPS.addCfgValset8(0x2091026b, 5); // CFG-MSGOUT-UBX_RXM_RTCM_USB   (every 5 solutions)
-        setValueSuccess &= configGPS.addCfgValset8(0x20910348, 20); // CFG-MSGOUT-UBX_NAV_SIG_USB   (every 20 solutions)   
+        setValueSuccess &= configGPS.addCfgValset8(0x20910348, 20); // CFG-MSGOUT-UBX_NAV_SIG_USB   (every 20 solutions)
+        setValueSuccess &= configGPS.addCfgValset8(0x2091005e, 0); // CFG-MSGOUT-UBX_NAV_TIMEUTC_USB   (off)   
 
         // ----- uart1 messages (Ardumower) -----------------  
         setValueSuccess &= configGPS.addCfgValset8(0x20910007, 0); // CFG-MSGOUT-UBX_NAV_PVT_UART1   (off)
@@ -191,7 +217,8 @@ bool UBLOX::configure(){
         setValueSuccess &= configGPS.addCfgValset8(0x20910034, 1); // CFG-MSGOUT-UBX_NAV_HPPOSLLH_UART1   (every solution)
         setValueSuccess &= configGPS.addCfgValset8(0x20910043, 1); // CFG-MSGOUT-UBX_NAV_VELNED_UART1     (every solution)
         setValueSuccess &= configGPS.addCfgValset8(0x20910269, 5); // CFG-MSGOUT-UBX_RXM_RTCM_UART1   (every 5 solutions)
-        setValueSuccess &= configGPS.sendCfgValset8(0x20910346, 20, timeout); // CFG-MSGOUT-UBX_NAV_SIG_UART1   (every 20 solutions)       
+        setValueSuccess &= configGPS.addCfgValset8(0x20910346, 20); // CFG-MSGOUT-UBX_NAV_SIG_UART1   (every 20 solutions)  
+        setValueSuccess &= configGPS.sendCfgValset8(0x2091005c, 0, timeout); // CFG-MSGOUT-UBX_NAV_TIMEUTC_UART1   (off)  
       }
       if (setValueSuccess){
         CONSOLE.println("OK");
@@ -339,6 +366,32 @@ void UBLOX::dispatchMessage() {
     switch (this->msgclass){
       case 0x01:
         switch (this->msgid) {
+          case 0x021:
+            { // UBX-NAV-TIMEUTC
+              iTOW = (unsigned long)this->unpack_int32(0);
+              year = (unsigned short)this->unpack_int16(12);
+              month = (unsigned char)this->unpack_int8(14);
+              day = (unsigned char)this->unpack_int8(15);
+              hour = (unsigned char)this->unpack_int8(16);
+              min = (unsigned char)this->unpack_int8(17);
+              sec = (unsigned char)this->unpack_int8(18);              
+              if (verbose) {
+                CONSOLE.print("UBX-NAV-TIMEUTC ");
+                CONSOLE.print("year=");
+                CONSOLE.print(year);
+                CONSOLE.print("  month=");
+                CONSOLE.print(month);
+                CONSOLE.print("  day=");
+                CONSOLE.print(day);
+                CONSOLE.print("  hour=");
+                CONSOLE.print(hour);
+                CONSOLE.print("  min=");
+                CONSOLE.print(min);
+                CONSOLE.print("  sec=");
+                CONSOLE.println(sec);                
+              }
+            }
+            break;
           case 0x07:
             { // UBX-NAV-PVT
               iTOW = (unsigned long)this->unpack_int32(0);
@@ -464,8 +517,9 @@ void UBLOX::dispatchMessage() {
               relPosN = ((float)this->unpack_int32(8))/100.0;
               relPosE = ((float)this->unpack_int32(12))/100.0;
               relPosD = ((float)this->unpack_int32(16))/100.0;              
-              solution = (UBLOX::SolType)((this->unpack_int32(60) >> 3) & 3);              
+              solution = (SolType)((this->unpack_int32(60) >> 3) & 3);              
               solutionAvail = true;
+              solutionTimeout=millis() + 1000;              
               if (verbose){
                 CONSOLE.print("UBX-NAV-RELPOSNED ");
                 CONSOLE.print("n=");
@@ -544,6 +598,13 @@ long UBLOX::unpack(int offset, int size) {
 /* parse the uBlox data */
 void UBLOX::run()
 {
+	if (millis() > solutionTimeout){
+    //CONSOLE.println("UBLOX::solutionTimeout");
+    solution = SOL_INVALID;
+    solutionTimeout = millis() + 1000;
+    solutionAvail = true;
+  }
+
 	// read a byte from the serial port	  
   if (!_bus->available()) return;
   while (_bus->available()) {		
