@@ -460,13 +460,12 @@ bool Motor::checkMowRpmFault(){
 void Motor::sense(){
   if (millis() < nextSenseTime) return;
   nextSenseTime = millis() + 20;
-  motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense, motorMow2Sense);
+  motorDriver.getMotorCurrent(motorLeftSense, motorRightSense, motorMowSense);
   float lp = 0.995; // 0.9
   motorRightSenseLP = lp * motorRightSenseLP + (1.0-lp) * motorRightSense;
   motorLeftSenseLP = lp * motorLeftSenseLP + (1.0-lp) * motorLeftSense;
   motorMowSenseLP = lp * motorMowSenseLP + (1.0-lp) * motorMowSense; 
-  motorMow2SenseLP = lp * motorMow2SenseLP + (1.0-lp) * motorMow2Sense; 
-  motorsSenseLP = motorRightSenseLP + motorLeftSenseLP + motorMowSenseLP + motorMow2SenseLP;
+  motorsSenseLP = motorRightSenseLP + motorLeftSenseLP + motorMowSenseLP;
   motorRightPWMCurrLP = lp * motorRightPWMCurrLP + (1.0-lp) * ((float)motorRightPWMCurr);
   motorLeftPWMCurrLP = lp * motorLeftPWMCurrLP + (1.0-lp) * ((float)motorLeftPWMCurr);
   lp = 0.99;

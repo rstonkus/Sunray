@@ -48,11 +48,9 @@ class Motor {
     float motorLeftSense; // left motor current (amps)
     float motorRightSense; // right  motor current (amps)
     float motorMowSense;  // mower motor current (amps)
-    float motorMow2Sense;  // mower motor current (amps)
     float motorLeftSenseLP; // left motor current (amps, low-pass)
     float motorRightSenseLP; // right  motor current (amps, low-pass)
     float motorMowSenseLP;  // mower motor current (amps, low-pass)    
-    float motorMow2SenseLP;  // mower motor current (amps, low-pass)     
     float motorsSenseLP; // all motors current (amps, low-pass)
     float motorLeftSenseLPNorm; 
     float motorRightSenseLPNorm;
