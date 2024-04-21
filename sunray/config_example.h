@@ -185,9 +185,11 @@ Also, you may choose the serial port below for serial monitor output (CONSOLE).
 // #define SECOND_MOW_MOTOR
 
 #ifdef SECOND_MOW_MOTOR
+  #define MOW_FAULT_CURRENT 4.0       // mowing motor fault current (amps)
   #define MOW_OVERLOAD_CURRENT 1.0    // single mowing motor overload current (amps)
 #else
   #define MOW_OVERLOAD_CURRENT 2.0    // mowing motor overload current (amps)
+  #define MOW_FAULT_CURRENT 8.0       // mowing motor fault current (amps)
 #endif
 
 // should the direction of mowing motor toggle each start? (yes: true, no: false)

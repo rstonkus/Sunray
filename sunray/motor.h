@@ -29,6 +29,7 @@ class Motor {
     bool motorLeftOverload; 
     bool motorRightOverload; 
     bool motorMowOverload; 
+    bool motorMow2Overload;
     bool tractionMotorsEnabled;       
     bool enableMowMotor;
     bool motorMowForwardSet; 

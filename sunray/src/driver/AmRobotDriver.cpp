@@ -548,11 +548,15 @@ void AmMotorDriver::getMotorCurrent(float &leftCurrent, float &rightCurrent, flo
             ValuePosCheck, mowDriverChip.adcVoltToAmpPow
       )  * mowDriverChip.adcVoltToAmpScale;
 
+  #ifdef SECOND_MOW_MOTOR
   ValuePosCheck = (((float)ADC2voltage(analogRead(pinMotorMow2Sense))) + gearsDriverChip.adcVoltToAmpOfs);
   if (ValuePosCheck < 0) ValuePosCheck = 0;	// avoid negativ numbers
   mow2Current = pow(
             ValuePosCheck, mowDriverChip.adcVoltToAmpPow
       )  * mowDriverChip.adcVoltToAmpScale;
+      #else
+        mow2Current = 0.0;
+    #endif
 }
 
 void AmMotorDriver::getMotorEncoderTicks(int &leftTicks, int &rightTicks, int &mowTicks){
