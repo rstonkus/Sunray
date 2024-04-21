@@ -16,6 +16,11 @@
 #include "ble.h"
 #include <Arduino.h>
 #include "config.h"
+#include "robot.h"
+#include "comm.h"
+
+bool bleConnected = false;
+unsigned long bleConnectedTimeout = 0;
 
 
 String BLEConfig::read(){
@@ -49,6 +54,8 @@ String BLEConfig::exec(String cmd, bool doRetry){
 }
 
 void BLEConfig::run(){  
+#ifndef __linux__   
+  CONSOLE.println("probing for HM-10 module (NOTE: will fail for ESP32)...");  
   int baud;
   bool found = false;
   //while (true){    
@@ -68,14 +75,14 @@ void BLEConfig::run(){
         case 11: baud=1382400; break;  */
         default: continue;
       }
-      CONSOLE.print("trying to detect Bluetooth 4.0/BLE module (make sure your phone is NOT connected)");
+      CONSOLE.print("trying to detect Bluetooth 4.0/BLE (HM-10 module) (make sure your phone is NOT connected)");
       CONSOLE.print(baud);
       CONSOLE.println("...");
       BLE.begin(baud);    
       //BLE.flush();
       String res = exec("AT\r\n", false);
       if (res.indexOf("OK") != -1){
-        CONSOLE.println("Bluetooth 4.0/BLE module found!");
+        CONSOLE.println("Bluetooth 4.0/BLE (HM-10) module found!");
         if (baud == BLE_BAUDRATE) {
           found = true;
           break;
@@ -106,4 +113,34 @@ void BLEConfig::run(){
     }
     //delay(1000);
   //}
+#endif
 }
+
+
+// process Bluetooth input
+void processBLE(){
+  char ch;   
+  if (BLE.available()){
+    battery.resetIdle();  
+    bleConnected = true;
+    bleConnectedTimeout = millis() + 5000;
+    while ( BLE.available() ){    
+      ch = BLE.read();      
+      if ((ch == '\r') || (ch == '\n')) {   
+        #ifdef VERBOSE
+          CONSOLE.print("BLE:");     
+          CONSOLE.println(cmd);        
+        #endif
+        processCmd(true, true);              
+        BLE.print(cmdResponse);    
+        cmd = "";
+      } else if (cmd.length() < 500){
+        cmd += ch;
+      }
+    }    
+  } else {
+    if (millis() > bleConnectedTimeout){
+      bleConnected = false;
+    }
+  }  
+}  

@@ -29,13 +29,20 @@ class Motor {
     bool motorLeftOverload; 
     bool motorRightOverload; 
     bool motorMowOverload; 
+    bool tractionMotorsEnabled;       
     bool enableMowMotor;
+    bool motorMowForwardSet; 
     bool odometryError;    
     unsigned long motorOverloadDuration; // accumulated duration (ms)
     int  pwmMax;
-    int  pwmMaxMow;    
+    int  pwmMaxMow;  
+    float  pwmSpeedOffset;
+    float mowMotorCurrentAverage;
+    float currentFactor;
+    bool pwmSpeedCurveDetection;
     unsigned long motorLeftTicks;
     unsigned long motorRightTicks;
+    unsigned long motorMowTicks;    
     float linearSpeedSet; // m/s
     float angularSpeedSet; // rad/s
     float motorLeftSense; // left motor current (amps)
@@ -50,21 +57,27 @@ class Motor {
     float motorLeftSenseLPNorm; 
     float motorRightSenseLPNorm;
     unsigned long motorMowSpinUpTime;
+    bool motorRecoveryState;    
     void begin();
     void run();      
     void test();
     void plot();
+    void enableTractionMotors(bool enable);
     void setLinearAngularSpeed(float linear, float angular, bool useLinearRamp = true);
     void setMowState(bool switchOn);   
+    void setMowMaxPwm( int val );
     void stopImmediately(bool includeMowerMotor);
   protected: 
     float motorLeftRpmSet; // set speed
-    float motorRightRpmSet;    
+    float motorRightRpmSet;   
     float motorLeftRpmCurr;
     float motorRightRpmCurr;
+    float motorMowRpmCurr;    
+    float motorLeftRpmCurrLP;
+    float motorRightRpmCurrLP;    
+    float motorMowRpmCurrLP;    
     float motorLeftRpmLast;
     float motorRightRpmLast;
-    bool motorMowForwardSet; 
     float motorMowPWMSet;  
     float motorMowPWMCurr; 
     int motorLeftPWMCurr;
@@ -73,10 +86,10 @@ class Motor {
     float motorLeftPWMCurrLP;
     float motorRightPWMCurrLP;    
     unsigned long lastControlTime;    
-    unsigned long nextSenseTime;            
-    bool resetMotorFault;
-    int resetMotorFaultCounter;
-    unsigned long nextResetMotorFaultTime;
+    unsigned long nextSenseTime;          
+    bool recoverMotorFault;
+    int recoverMotorFaultCounter;
+    unsigned long nextRecoverMotorFaultTime;
     int motorLeftTicksZero;    
     int motorRightTicksZero;    
     PID motorLeftPID;
@@ -86,9 +99,13 @@ class Motor {
     void speedPWM ( int pwmLeft, int pwmRight, int pwmMow );
     void control();    
     bool checkFault();
+    void checkOverload();
+    bool checkOdometryError();
+    bool checkMowRpmFault();
+    bool checkCurrentTooHighError();    
+    bool checkCurrentTooLowError();
     void sense();
-    void dumpOdoTicks(int seconds);
-    
+    void dumpOdoTicks(int seconds);    
 };
 
 
